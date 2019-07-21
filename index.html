@@ -12,6 +12,11 @@ var respecConfig = {
   github: "https://github.com/WICG/netinfo/",
   editors: [
     {
+      name: "Yoav Weiss",
+      company: "Google",
+      companyURL: "http://google.com",
+    },
+    {
       name: "Ilya Grigorik",
       company: "Google",
       companyURL: "http://google.com",
@@ -35,7 +40,13 @@ var respecConfig = {
   localBiblio: {
     "CLIENT-HINTS": {
       title: "HTTP Client Hints",
-      href: "https://tools.ietf.org/html/draft-grigorik-http-client-hints",
+      href: "https://tools.ietf.org/html/draft-ietf-httpbis-client-hints-07",
+      status: "Internet-Draft",
+      publisher: "IETF",
+    },
+    "STRUCTURED-HEADERS": {
+      title: "Structured Headers for HTTP",
+      href: "https://tools.ietf.org/html/draft-ietf-httpbis-header-structure-11",
       status: "Internet-Draft",
       publisher: "IETF",
     }
@@ -61,7 +72,7 @@ This document describes an API that addresses a specific requirement: Communicat
 
 ## <dfn>NavigatorNetworkInformation</dfn> interface
 
-The <code><dfn data-cite="!netinfo#network-information">NetworkInformation</dfn></code> interface exposes access to <a>saveData</a> by mixing in <a>NetworkInformationSaveData</a>.
+The <code><dfn data-cite="netinfo#network-information">NetworkInformation</dfn></code> interface exposes access to <a>saveData</a> by mixing in <a>NetworkInformationSaveData</a>.
 
 <pre class="idl">
   interface mixin NetworkInformationSaveData {
@@ -79,16 +90,15 @@ The <code><dfn data-cite="!netinfo#network-information">NetworkInformation</dfn>
 
   #### <code><dfn>Save-Data</dfn></code> Request Header Field
 
-  The <a>SaveData</a> [[!CLIENT-HINTS]] request header field consists of one or more tokens that indicate user agent's preference for reduced data usage.
+  The <a>SaveData</a> request header is a Client Hint [[CLIENT-HINTS]]. The header's value is an `sh-list` [[STRUCTURED-HEADERS]] which contains `token`s, indicating the user agent's preference for reduced data usage.
 
   <pre class="nohighlight">
-    Save-Data = sd-token \*( OWS ";" OWS [sd-token] )
-    sd-token = token
+    Save-Data = sh-list
   </pre>
 
-  This specification defines the "`on`" `sd-token` value, which is used as a signal indicating explicit user opt-in into a reduced data usage mode (i.e. when <a>saveData</a>'s value is `true`), and when communicated to origins allows them to deliver alternate content honoring such preference - e.g. smaller image and video resources, alternate markup, and so on.
+  This specification defines the "`on`" `token` value, which is used as a signal indicating explicit user opt-in into a reduced data usage mode (i.e. when <a>saveData</a>'s value is `true`), and when communicated to origins allows them to deliver alternate content honoring such preference - e.g. smaller image and video resources, alternate markup, and so on.
 
-  If <a>Save-Data</a> occurs in a message more than once, the last value overrides all previous occurrences.
+  In case of multiple conflicting tokens in the list, the latest token takes precedence.
 
   <div class="issue">
     TODO: update <a href="https://fetch.spec.whatwg.org/#fetching">Fetch#fetching algorithm</a> to use `connection.saveData` as signal to append the Save-Data header.
@@ -103,9 +113,9 @@ When the user's <a>saveData</a> preference changes, the user agent MUST run the 
 
   1. Let <var>new-saveData</var> be the current <a>saveData</a> preference.
   1. If <var>new-saveData</var> is not equal to the value of `connection.saveData`:
-    1. Using the <a data-cite="!HTML#networking-task-source">networking task source</a>, <a data-cite="!HTML#queue-a-task">queue a task</a> to perform the following:
+    1. Using the <a data-cite="HTML#networking-task-source">networking task source</a>, <a data-cite="HTML#queue-a-task">queue a task</a> to perform the following:
       1. Set `connection.saveData` to <var>new-saveData</var>.
-      1. <a data-cite="!DOM#concept-event-fire">Fire an event</a> named `change` at the `NetworkInformation` object.
+      1. <a data-cite="DOM#concept-event-fire">Fire an event</a> named `change` at the `NetworkInformation` object.
 </section>
 
 <section>
@@ -121,7 +131,7 @@ For example, user agents may decide to omit or lie about the user's preference w
 <section id="iana-considerations">
 ## IANA Considerations
 
-The following three HTTP request header fields should be added to the permanent registry of message header fields (see [[!RFC3864]]), taking into account the guidelines given by HTTP/1.1 [[!RFC7231]].
+The following three HTTP request header fields should be added to the permanent registry of message header fields (see [[RFC3864]]), taking into account the guidelines given by HTTP/1.1 [[RFC7231]].
 
 <section id="registration-save-data">
 ### `Save-Data` Request Header Field Registration
@@ -143,6 +153,6 @@ The following three HTTP request header fields should be added to the permanent 
 
 <section class="appendix">
   ## Acknowledgments
-  This document reuses text from the [[!HTML]] specification
+  This document reuses text from the [[HTML]] specification
   as permitted by the license of that specification.
 </section>
